@@ -101,3 +101,26 @@ echo "Run 'docker compose up -d' to start Plex."
 # Change to docker compose directory and start the container
 cd /home/docker-compose/plex/
 docker compose up -d
+
+
+# Configure HA with standard configuration
+
+HA_CONF_DIR=/data/docker-containers/homeassistant/config
+mkdir -p $HA_CONF_DIR
+mkdir -p /home/docker-compose/homeassistant
+cat << EOF > /home/docker-compose/homeassistant/docker-compose.yml
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    volumes:
+      - $HA_CONF_DIR:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+EOF
+
+cd /home/docker-compose/homeassistant
+docker compose up -d

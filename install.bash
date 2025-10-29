@@ -47,4 +47,57 @@ docker compose up -d
 ## Check the container
 # http://<machine-ip-address>:2283
 
-s
+# Plex Configuration
+PLEX_HOME_DIR=/data/docker-containers/plex
+
+# --- 1. Define Variables ---
+
+# WARNING: Replace these placeholder values with your actual system IDs and desired paths
+PUID=$(id -u)
+PGID=$(id -g)
+PLEX_CONFIG="$PLEX_HOME_DIR/config"
+PLEX_MOVIES="$PLEX_HOME_DIR/library/movies"
+PLEX_TV="$PLEX_HOME_DIR/library/tv-shows"
+PLEX_CLAIM="YOUR_PLEX_CLAIM_TOKEN"
+TIME_ZONE="Europe/Bucharest"
+mkdir -p /home/docker-compose/plex
+
+# --- 2. Create the Directory Structure (Best Practice) ---
+mkdir -p "$PLEX_CONFIG"
+mkdir -p "$PLEX_MOVIES"
+mkdir -p "$PLEX_TV"
+
+# --- 3. Generate the docker-compose.yml File using a Here Document (EOF) ---
+
+# The variables within the EOF block will be expanded by the shell.
+cat << EOF > /home/docker-compose/plex/docker-compose.yml
+version: "2.1"
+services:
+  plex:
+    image: plexinc/pms-docker:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TIME_ZONE
+      - PLEX_CLAIM=$PLEX_CLAIM
+    volumes:
+      # Plex Configuration
+      - $PLEX_CONFIG:/config
+      # Media Libraries (Read-Only)
+      - $PLEX_MOVIES:/data/movies:ro
+      - $PLEX_TV:/data/tv:ro
+    restart: unless-stopped
+EOF
+
+echo "✅ docker-compose.yml created successfully with the following paths:"
+echo "   Config: $PLEX_CONFIG"
+echo "   Movies: $PLEX_MOVIES"
+echo "   TV:     $PLEX_TV"
+echo ""
+echo "Run 'docker compose up -d' to start Plex."
+
+# Change to docker compose directory and start the container
+cd /home/docker-compose/plex/
+docker compose up -d

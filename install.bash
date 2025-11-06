@@ -124,3 +124,62 @@ EOF
 
 cd /home/docker-compose/homeassistant
 docker compose up -d
+
+
+# Configure Paperless-ngx
+
+
+
+## Configure Mealie
+# We need to change the secret of the DB
+MEALIE_DATA=/data/docker-containers/mealie
+
+mkdir -p /home/docker-compose/mealie
+mkdir -p $MEALIE_DATA
+cat << EOF > /home/docker-compose/mealie/docker-compose.yml
+version: '3.8'
+
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    container_name: mealie
+    restart: always
+    ports:
+      # Maps host port 9925 to container port 9000
+      - "9925:9000"
+    volumes:
+      # Persistent storage for user data (images, backups, configuration)
+      - $MEALIE_DATA/mealie-data:/app/data/
+    environment:
+      # --- General Settings ---
+      - ALLOW_SIGNUP=true
+      - PUID=1000                   # Change to your user's PUID/UID
+      - PGID=1000                   # Change to your user's PGID/GID
+      - TZ=Europe/London            # Set your correct TimeZone
+      # --- Database Settings (Connects to the 'postgres' service) ---
+      - POSTGRES_USER=mealie_user
+      - POSTGRES_PASSWORD=R!^hZ#2^zRiJChm27ru2^98  # << CHANGE THIS
+      - POSTGRES_SERVER=postgres              # Matches the service name below
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=mealie_db
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    restart: always
+    # NOTE: The host port (e.g., 5432) is commented out for security.
+    # It is accessible internally by the 'mealie' service via the network.
+    # If you need external access (e.g., for pgAdmin), uncomment the ports line.
+    # ports:
+    #   - "5432:5432"
+    volumes:
+      # Persistent storage for the PostgreSQL database files
+      - $MEALIE_DATA/postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=mealie_user
+      - POSTGRES_PASSWORD=R!^hZ#2^zRiJChm27ru2^98 # << MUST match Mealie's POSTGRES_PASSWORD 
+      - POSTGRES_DB=mealie_db
+EOF
+
+cd /home/docker-compose/mealie
+docker compose up -d

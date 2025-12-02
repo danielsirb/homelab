@@ -38,8 +38,8 @@ sed -i 's/^DB_PASSWORD=.*$/DB_PASSWORD=jjZ77fY8c3h!M8wvYRT4H@Q/' .env
 sed -i -e '/^#[[:space:]]*TZ=/ c\TZ=Europe/Bucharest' -e '/^TZ=/ c\TZ=Europe/Bucharest' .env
 
 # Set immich libraries location
-mkdir -p /data/docker-containers/immich/library
-sed -i 's|^UPLOAD_LOCATION=.*$|UPLOAD_LOCATION=/data/docker-containers/immich/library|' .env
+mkdir -p /home/data/docker-containers/immich/library
+sed -i 's|^UPLOAD_LOCATION=.*$|UPLOAD_LOCATION=/home/data/docker-containers/immich/library|' .env
 
 # Create Immich container
 docker compose up -d
@@ -48,7 +48,7 @@ docker compose up -d
 # http://<machine-ip-address>:2283
 
 # Plex Configuration
-PLEX_HOME_DIR=/data/docker-containers/plex
+PLEX_HOME_DIR=/home/data/docker-containers/plex
 
 # --- 1. Define Variables ---
 
@@ -103,9 +103,19 @@ cd /home/docker-compose/plex/
 docker compose up -d
 
 
+# For nabucasa i need
+#/etc/udev/rules.d/99-skyconnect.rules
+#with content
+# Rule for SkyConnect USB device
+#SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="ttyUSBSkyConnect"
+cat << EOF > /etc/udev/rules.d/99-skyconnect.rules
+# Rule for SkyConnect USB device
+#SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="ttyUSBSkyConnect"
+EOF
+
 # Configure HA with standard configuration
 
-HA_CONF_DIR=/data/docker-containers/homeassistant/config
+HA_CONF_DIR=/home/data/docker-containers/homeassistant/config
 mkdir -p $HA_CONF_DIR
 mkdir -p /home/docker-compose/homeassistant
 cat << EOF > /home/docker-compose/homeassistant/docker-compose.yml
@@ -117,6 +127,8 @@ services:
       - $HA_CONF_DIR:/config
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
+    devices:
+      - /dev/ttyUSBSkyConnect
     restart: unless-stopped
     privileged: true
     network_mode: host
@@ -132,7 +144,7 @@ docker compose up -d
 
 ## Configure Mealie
 # We need to change the secret of the DB
-MEALIE_DATA=/data/docker-containers/mealie
+MEALIE_DATA=/home/data/docker-containers/mealie
 
 mkdir -p /home/docker-compose/mealie
 mkdir -p $MEALIE_DATA

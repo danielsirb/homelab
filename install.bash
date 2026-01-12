@@ -21,7 +21,7 @@ systemctl enable docker
 docker --version
 docker compose version
 
-
+#disable firewall
 
 
 
@@ -125,6 +125,7 @@ docker compose up -d
 
 
 ##### Metube ######
+#####  DONE  ######
 METUBE_DATA=$DOCKER_DATA/metube/downloads
 mkdir -p $DOCKER_COMPOSE_DIR/metube/downloads
 cat << EOF > $DOCKER_COMPOSE_DIR/metube/docker-compose.yml

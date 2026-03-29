@@ -77,7 +77,7 @@ log_message "INFO" "Creating doker-compose file $DOCKER_COMPOSE_DIR/$APP_NAME/do
 cat << EOF > $DOCKER_COMPOSE_DIR/$APP_NAME/docker-compose.yml
 services:
   homeassistant:
-    container_name: ${APP_NAME}
+    container_name: tool-${APP_NAME}
     image: "ghcr.io/home-assistant/home-assistant:stable"
     dns: 
       - 1.1.1.1 # Cloudflare DNS (Very fast and reliable)

@@ -68,7 +68,7 @@ cat << EOF > $DOCKER_COMPOSE_DIR/$APP_NAME/docker-compose.yml
 services:
   mealie:
     image: ghcr.io/mealie-recipes/mealie:latest
-    container_name: $APP_NAME
+    container_name: tool-${APP_NAME}
     restart: always
     ports:
       # Maps host port 9925 to container port 9000

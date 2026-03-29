@@ -55,7 +55,7 @@ cat << EOF > $DOCKER_COMPOSE_DIR/$APP_NAME/docker-compose.yml
 services:
   archivebox:
     image: archivebox/archivebox:latest
-    container_name: archivebox
+    container_name: tool-${APP_NAME}
     ports:
       - "${PORT}:8000"
     volumes:

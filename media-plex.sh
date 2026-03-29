@@ -56,7 +56,7 @@ cat << EOF > $DOCKER_COMPOSE_DIR/$APP_NAME/docker-compose.yml
 services:
   plex:
     image: plexinc/pms-docker:latest
-    container_name: plex
+    container_name: media-${APP_NAME}
     network_mode: host
     devices:
       - /dev/dri:/dev/dri # Passes the entire GPU interface

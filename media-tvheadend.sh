@@ -61,7 +61,7 @@ cat << EOF > $DOCKER_COMPOSE_DIR/$APP_NAME/docker-compose.yml
 services:
   tvheadend:
     image: lscr.io/linuxserver/tvheadend:latest
-    container_name: tvheadend
+    container_name: tool-${APP_NAME}
     environment:
       - PUID=$PUID # Use 'id $user' in terminal to find your PUID
       - PGID=$PGID # Use 'id $user' in terminal to find your PGID

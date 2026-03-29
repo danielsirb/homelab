@@ -1,7 +1,7 @@
 #/bin/bash
 source /etc/docker_variables.env
 source $SCRIPT_LIB
-
+HOSTNAME_IP=$(hostname -i)
 # --- Parameter Parsing ---
 # Use getopt to parse long and short options
 for i in "$@"; do
@@ -10,53 +10,48 @@ for i in "$@"; do
     APP_NAME="${i#*=}"
     shift # past argument=value
     ;;
-    --user-id=*)
-    PUID="${i#*=}"
-    shift # past argument=value
-    ;;
-    --group-id=*)
-    PGID="${i#*=}"
-    shift # past argument=value
-    ;;
     esac
 done
 
 if [ -z $APP_NAME ];then
-    APP_NAME=metube
-fi
-if [ -z $PUID ];then
-    PUID=$MEDIA_PUID
-fi
-if [ -z $PGID ];then
-    PGID=$MEDIA_PGID
+    APP_NAME=n8n
 fi
 
 # Configure service
-METUBE_DATA=$DOCKER_FAST_DATA/$APP_NAME
-METUBE_DIRECTORIES=("${DOCKER_COMPOSE_DIR}/${APP_NAME}" "${METUBE_DATA}")
+N8N_DATA=$DOCKER_FAST_DATA/$APP_NAME
+N8N_DIRECTORIES=("${DOCKER_COMPOSE_DIR}/${APP_NAME}" "${N8N_DATA}" "${N8N_DATA}/n8n_data")
 
 
 log_message "INFO" "Starting container $APP_NAME creation."
 log_message "INFO" "Recived Parameters: ."
 
 # Create Stoarage Directory List
-create_folders $METUBE_DIRECTORIES
+create_folders $N8N_DIRECTORIES
+chown -r 1000:1000 ${N8N_DATA}/n8n_data
 
 log_message "INFO" "Creating doker-compose file $DOCKER_COMPOSE_DIR/$APP_NAME/docker-compose.yml"
 cat << EOF > $DOCKER_COMPOSE_DIR/$APP_NAME/docker-compose.yml
 services:
-  metube:
-    image: ghcr.io/alexta69/metube
-    container_name: media-${APP_NAME}
-    restart: unless-stopped
-    environment:
-      - UID=$PUID
-      - GID=$PGID
-      - UMASK=022
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: tool-${APP_NAME}
+    restart: always
     ports:
-      - "8081:8081" # Web UI access
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://${HOSTNAME_IP}:5678/
+      - N8N_SECURE_COOKIE=false # This should be removed if you use a dns
+      - GENERIC_TIMEZONE=$TIME_ZONE
     volumes:
-      - $METUBE_DATA:/downloads # IMPORTANT: Persistent storage for files
+      - $N8N_DATA/n8n_data:/home/node/.n8n
+
+volumes:
+  n8n_data:
+    external: false
 EOF
 
 cat $DOCKER_COMPOSE_DIR/$APP_NAME/docker-compose.yml >> $LOG_FILE

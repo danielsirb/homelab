@@ -10,53 +10,38 @@ for i in "$@"; do
     APP_NAME="${i#*=}"
     shift # past argument=value
     ;;
-    --user-id=*)
-    PUID="${i#*=}"
-    shift # past argument=value
-    ;;
-    --group-id=*)
-    PGID="${i#*=}"
-    shift # past argument=value
-    ;;
     esac
 done
 
 if [ -z $APP_NAME ];then
-    APP_NAME=metube
-fi
-if [ -z $PUID ];then
-    PUID=$MEDIA_PUID
-fi
-if [ -z $PGID ];then
-    PGID=$MEDIA_PGID
+    APP_NAME=time-server
 fi
 
+
 # Configure service
-METUBE_DATA=$DOCKER_FAST_DATA/$APP_NAME
-METUBE_DIRECTORIES=("${DOCKER_COMPOSE_DIR}/${APP_NAME}" "${METUBE_DATA}")
+TIME_DATA=$DOCKER_FAST_DATA/$APP_NAME
+TIME_DIRECTORIES=("${DOCKER_COMPOSE_DIR}/${APP_NAME}" "${TIME_DATA}")
 
 
 log_message "INFO" "Starting container $APP_NAME creation."
 log_message "INFO" "Recived Parameters: ."
 
 # Create Stoarage Directory List
-create_folders $METUBE_DIRECTORIES
+create_folders $TIME_DIRECTORIES
 
 log_message "INFO" "Creating doker-compose file $DOCKER_COMPOSE_DIR/$APP_NAME/docker-compose.yml"
 cat << EOF > $DOCKER_COMPOSE_DIR/$APP_NAME/docker-compose.yml
 services:
-  metube:
-    image: ghcr.io/alexta69/metube
-    container_name: media-${APP_NAME}
-    restart: unless-stopped
-    environment:
-      - UID=$PUID
-      - GID=$PGID
-      - UMASK=022
+  ntp:
+    image: cturra/ntp:latest
+    container_name: tool-${APP_NAME}
+    container_name: ntp-server
+    restart: always
     ports:
-      - "8081:8081" # Web UI access
-    volumes:
-      - $METUBE_DATA:/downloads # IMPORTANT: Persistent storage for files
+      - "123:123/udp"
+    environment:
+      - NTP_SERVERS=time.cloudflare.com,time.google.com
+      - LOG_LEVEL=0
 EOF
 
 cat $DOCKER_COMPOSE_DIR/$APP_NAME/docker-compose.yml >> $LOG_FILE
